@@ -40,7 +40,6 @@
 
 
 // std
-#include <AntTweakBar.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -82,8 +81,8 @@ struct TriangleMesh
 // Globals ---------------------------------------
 unsigned int window_width  = 800;
 unsigned int window_height = 600;
-unsigned int image_width   = 800;
-unsigned int image_height  = 600;
+unsigned int image_width   = 1600;
+unsigned int image_height  = 1200;
 float delta_t = 0;
 
 GLuint pbo;               // this pbo is used to connect CUDA and openGL
@@ -126,53 +125,14 @@ bool initGL();
 bool initCUDA( int argc, char **argv);
 void initCUDAmemory();
 void loadObj(const std::string filename, TriangleMesh &mesh);
-void Terminate(void);
-void initTweakMenus();
 void display();
 void reshape(int width, int height);
 void keyboard(unsigned char key, int x, int y);
-void KeyboardUpCallback(unsigned char key, int x, int y);
 void SpecialKey(int key, int x, int y);
 void mouse(int button, int state, int x, int y);
 void motion(int x, int y);
 void rayTrace();
 
-TwBar *bar; // Pointer to the tweak bar
-
-void initTweakMenus()
-{
-	if( !TwInit(TW_OPENGL, NULL) )
-	{
-		// A fatal error occurred	
-		fprintf(stderr, "AntTweakBar initialization failed: %s\n", TwGetLastError());
-		exit(0);
-	}
-
-	bar = TwNewBar("Parameters");
-
-	TwAddVarRW(bar, "camera rotation", TW_TYPE_FLOAT, &camera_rotation, 
-		" min=-5.0 max=5.0 step=0.01 group='Camera'");
-	TwAddVarRW(bar, "camera distance", TW_TYPE_FLOAT, &camera_distance, 
-		" min= 1.0 max=125.0 step=0.1 group='Camera'");
-	TwAddVarRW(bar, "camera height", TW_TYPE_FLOAT, &camera_height, 
-		" min= -35.0 max= 100.0 step=0.1 group='Camera'");
-
-	TwAddVarRW(bar, "light_pos_x", TW_TYPE_FLOAT, &light_x, 
-		" min= -100.0 max= 100.0 step=0.1 group='Light_source'");
-	TwAddVarRW(bar, "light_pos_y", TW_TYPE_FLOAT, &light_y, 
-		" min= -100.0 max= 100.0 step=0.1 group='Light_source'");
-	TwAddVarRW(bar, "light_pos_z", TW_TYPE_FLOAT, &light_z, 
-		" min= -100.0 max= 100.0 step=0.1 group='Light_source'");
-
-	TwAddVarRW(bar,"light_color",TW_TYPE_COLOR3F, &light_color, " group='Light_source' ");
-
-}
-
-// Function called at exit
-void Terminate(void)
-{ 
-	TwTerminate();
-}
 
 bool initGL()
 {
@@ -196,7 +156,6 @@ bool initGL()
 	// view-port
 	glViewport(0, 0, window_width, window_height);
 
-	initTweakMenus();
 	return true;
 }
 
@@ -310,8 +269,6 @@ void reshape(int width, int height)
 	gluPerspective(60.0f, (double)width/height, 0.1, 100);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	// Send the new window size to AntTweakBar
-	TwWindowSize(width, height);
 }
 
 
@@ -442,8 +399,6 @@ void display()
 	rayTrace();
 	displayTexture();
 
-	TwDraw();
-
 	glutSwapBuffers();
 	glutPostRedisplay();
 }
@@ -457,21 +412,9 @@ void keyboard(unsigned char key, int /*x*/, int /*y*/)
 		animate = !animate;
 		break;
 	case(27) :
-		Terminate();
 		exit(0);
 	}
 }
-
-void KeyboardUpCallback(unsigned char key, int x, int y)
-{
-
-	
-	if(TwEventKeyboardGLUT(key,x, y))
-	{
-		return;
-	}
-}
-
 
 int main(int argc, char** argv)
 {
@@ -499,16 +442,9 @@ int main(int argc, char** argv)
 	// register callbacks
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
-	glutKeyboardUpFunc(KeyboardUpCallback);
 	glutSpecialUpFunc(SpecialKey);
 	
 	glutReshapeFunc(reshape);
-	// - Directly redirect GLUT mouse button events to AntTweakBar
-	glutMouseFunc((GLUTmousebuttonfun)TwEventMouseButtonGLUT);
-	// - Directly redirect GLUT mouse motion events to AntTweakBar
-	glutMotionFunc((GLUTmousemotionfun)TwEventMouseMotionGLUT);
-	// - Directly redirect GLUT mouse "passive" motion events to AntTweakBar (same as MouseMotion)
-	glutPassiveMotionFunc((GLUTmousemotionfun)TwEventMouseMotionGLUT);
 
 	// start rendering main-loop
 	glutMainLoop();
