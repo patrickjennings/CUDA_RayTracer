@@ -1,0 +1,54 @@
+==Authors==
+	Patrick Jennings
+	Stevie Frederick
+
+
+==Write Up==
+We implemented two common anti aliasing algorithms for our ray tracing program: Adaptive
+Sampling and Stochastic Sampling. Adaptive sampling uses multiple rays per pixel. The rays are
+extended in a grid so that the distance between each ray is the same. In our code, the adaptive algorithm
+was implemented using a distance of the inverse of the number of rays per pixel. Stochastic also uses
+multiple rays per pixel but it uses a non uniform distance. We decided to use a pseudo random distance
+that is calculated by moding a color in the pixel data by 50, adding five, and taking the inverse. Both
+algorithms average the color of the rays that are contained in the pixel.
+The two implementations gave us suprising results. The adaptive sampling provides the best
+picture quality. When the stochastic algorithm is run, jittering is observed at the edge of the objects.
+This is a result of the random step size that the stochastic algorithm uses to increase the resolution of
+the image. Instead, the adaptive sampling algorithm uses a uniform distance that allows the picture to
+look cleaner and less jagged around the edges. The picture quality of both algorithms look much better
+than the program without anti aliasing. The algorithms blur the edges of objects and make images look
+much less jagged.
+Increasing the number of rays per pixel has a dramatic impact on the performance of our
+program. Even increasing the number of rays extended per pixel to 2, slows down the execution speed
+of the program that it starts to tear and look out of sync.
+Our group implemented several optimizations. The first optimization we did was increase the
+block size. The default block size was 8x8x1. Increasing the block size to 16x16x1 gives us a black
+screen. This may be due to the limited memory size of the blocks.Adding more threads overloads the
+GPU and it will not run the code. Thus, we set the block size to 10x10x1. Increasing the block size
+allows more threads to be executed in parallel. Next, we added a conditional at the end of the loop that
+determines if the colors of pixel are converging. If the conditional determines that the ray colors are
+converging, it will stop extending rays and set the pixel value to the color. Adjusting the allowed error
+between the colors can have a dramatic affect on performance. Increasing the error allows more
+aliasing errors through the algorithm but the program will execute much faster. Thus, we want to
+determine the amount of error that will eliminate all aliasing prblems yet stop looping when there are
+no aliasing problems in the pixel.
+Originally we wanted to implement a super sampling algorithm that down sampled a
+quadrupled sized image to antialias the entire render. This proved difficult and increased render time by
+up to 10x. We then tried to create an adaptive sampling algorithm that only sampled per edges, but we
+were unable to find a way to calculate where there was a troubled edge. This led us to decide to create
+the pseudorandom Stochastic Algorithm and uniform Adaptive Algorithm.
+We encountered a few problems in designing the algorithms. The biggest issue was
+understanding the raytracing code. The comments within the code helped a bit but with little to no other
+documentation save for the tutorial itself and the accompanying video, we ran into issues with editing
+the code. This led to us feeling as though we were hacking the code rather than modifying it. In order to
+figure out the rays per pixel algorithm we had to look at other source code that was better documented
+in other repositories. This was a valuable learning experience since being able to manage
+undocumented code is a science in itself, but was the biggest issue in us optimizing our AA.
+If we had more time we would have implemented a true Adaptive Sampling algorithm that
+allowed for Blocks outside the raytracer itself to downsample. This we feel would have optimized the
+speed of the output render in terms of FPS, rather than our current algorithm that uses the raytracer
+itself to sample. In other words instead of sequentially calculating the raytracing procedure (which is
+done in parallel), we would do the AA sampling and the raytracing in parallel on separate blocks on the
+card. We feel this would speed up the FPS in theory but without an actual test this is uncofirmed.
+-March 2010
+
